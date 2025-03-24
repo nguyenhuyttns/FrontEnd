@@ -26,10 +26,10 @@ class User {
 
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
-      id: json['id'],
-      name: json['name'],
-      email: json['email'],
-      phone: json['phone'],
+      id: json['id'] ?? json['_id'] ?? '',
+      name: json['name'] ?? '',
+      email: json['email'] ?? '',
+      phone: json['phone'] ?? '',
       isAdmin: json['isAdmin'] ?? false,
       street: json['street'] ?? '',
       apartment: json['apartment'] ?? '',
@@ -57,5 +57,39 @@ class User {
     final Map<String, dynamic> data = toJson();
     data['password'] = password;
     return data;
+  }
+
+  Map<String, dynamic> toUpdateJson({String? password}) {
+    final Map<String, dynamic> data = toJson();
+    if (password != null && password.isNotEmpty) {
+      data['password'] = password;
+    }
+    return data;
+  }
+
+  User copyWith({
+    String? id,
+    String? name,
+    String? email,
+    String? phone,
+    bool? isAdmin,
+    String? street,
+    String? apartment,
+    String? zip,
+    String? city,
+    String? country,
+  }) {
+    return User(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      email: email ?? this.email,
+      phone: phone ?? this.phone,
+      isAdmin: isAdmin ?? this.isAdmin,
+      street: street ?? this.street,
+      apartment: apartment ?? this.apartment,
+      zip: zip ?? this.zip,
+      city: city ?? this.city,
+      country: country ?? this.country,
+    );
   }
 }

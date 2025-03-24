@@ -1,6 +1,7 @@
 // lib/main.dart
 import 'package:flutter/material.dart';
 import 'package:frontend/provider/cart_provider.dart';
+import 'package:frontend/view_models/user_view_model.dart';
 import 'package:provider/provider.dart';
 import 'views/auth/login_screen.dart';
 import 'views/auth/register_screen.dart';
@@ -15,6 +16,7 @@ void main() {
         ChangeNotifierProvider(create: (_) => CartProvider()),
         ChangeNotifierProvider(create: (_) => ProductViewModel()),
         ChangeNotifierProvider(create: (_) => AuthViewModel()),
+        ChangeNotifierProvider(create: (_) => UserViewModel()),
         // Thêm các provider khác nếu cần
       ],
       child: const MyApp(),
