@@ -1,7 +1,7 @@
 // lib/views/carts/cart_screen.dart
 import 'package:flutter/material.dart';
 import 'package:frontend/provider/cart_provider.dart';
-import 'package:frontend/views/checkout_screen.dart';
+import 'package:frontend/views/orders/checkout_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:frontend/config/api_config.dart';
 

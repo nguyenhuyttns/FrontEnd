@@ -4,11 +4,11 @@ import 'package:frontend/config/api_config.dart';
 import 'package:frontend/views/carts/cart_screen.dart';
 import 'package:frontend/views/profile/profile_screen.dart';
 import 'package:frontend/views/wallet/wallet_screen.dart';
+import 'package:frontend/widgets/product_card.dart'; // Import the new widget
 import 'package:provider/provider.dart';
 import '../../view_models/product_view_model.dart';
 import '../../models/product.dart';
 import 'product_detail_screen.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import '../../view_models/auth_view_model.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -20,7 +20,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _searchController = TextEditingController();
-  int _selectedIndex = 0; // Thêm biến để theo dõi tab đang được chọn
+  int _selectedIndex = 0;
 
   @override
   void dispose() {
@@ -33,25 +33,21 @@ class _HomeScreenState extends State<HomeScreen> {
       _selectedIndex = index;
     });
 
-    // Chuyển đến màn hình tương ứng
     switch (index) {
       case 0:
-        // Đã ở Home, không cần làm gì
+        // Already on Home
         break;
       case 1:
-        // Chuyển đến Cart
         Navigator.of(
           context,
         ).push(MaterialPageRoute(builder: (context) => CartScreen()));
         break;
       case 2:
-        // Chuyển đến Wallet
         Navigator.of(
           context,
         ).push(MaterialPageRoute(builder: (context) => WalletScreen()));
         break;
       case 3:
-        // Chuyển đến Profile
         Navigator.of(
           context,
         ).push(MaterialPageRoute(builder: (context) => ProfileScreen()));
@@ -69,7 +65,7 @@ class _HomeScreenState extends State<HomeScreen> {
               onRefresh: () => productViewModel.refreshProducts(),
               child: CustomScrollView(
                 slivers: [
-                  // App Bar with Title - Fixed to prevent overflow
+                  // App Bar with Title
                   SliverAppBar(
                     floating: true,
                     pinned: true,
@@ -92,17 +88,14 @@ class _HomeScreenState extends State<HomeScreen> {
                       ],
                     ),
                     actions: [
-                      // Notification Icon
                       IconButton(
                         icon: const Icon(Icons.notifications_outlined),
                         onPressed: () {},
                       ),
-                      // Logout Button
                       IconButton(
                         icon: const Icon(Icons.logout),
                         tooltip: 'Logout',
                         onPressed: () {
-                          // Show confirmation dialog
                           showDialog(
                             context: context,
                             builder: (BuildContext context) {
@@ -119,18 +112,13 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ),
                                   TextButton(
                                     onPressed: () async {
-                                      // Thực hiện đăng xuất thông qua AuthViewModel
                                       final authViewModel =
                                           Provider.of<AuthViewModel>(
                                             context,
                                             listen: false,
                                           );
                                       await authViewModel.logout();
-
-                                      // Đóng dialog
                                       Navigator.of(context).pop();
-
-                                      // Điều hướng về màn hình đăng nhập
                                       Navigator.of(
                                         context,
                                       ).pushReplacementNamed('/login');
@@ -144,11 +132,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         },
                       ),
                     ],
-                    // Sửa lỗi tràn bố cục bằng cách tăng preferredSize và điều chỉnh padding
                     bottom: PreferredSize(
-                      preferredSize: const Size.fromHeight(
-                        66,
-                      ), // Tăng chiều cao lên
+                      preferredSize: const Size.fromHeight(66),
                       child: Container(
                         padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                         child: _buildSearchBar(productViewModel),
@@ -200,6 +185,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     )
                   else
+                    // In home_screen.dart, update the SliverGrid section:
                     SliverPadding(
                       padding: const EdgeInsets.all(16),
                       sliver: SliverGrid(
@@ -212,7 +198,21 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                         delegate: SliverChildBuilderDelegate((context, index) {
                           final product = productViewModel.products[index];
-                          return _buildProductCard(context, product);
+                          return ProductCard(
+                            product: product,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder:
+                                      (context) => ProductDetailScreen(
+                                        productId: product.id,
+                                      ),
+                                ),
+                              );
+                            },
+                            // Remove the onAddToCart parameter
+                          );
                         }, childCount: productViewModel.products.length),
                       ),
                     ),
@@ -220,11 +220,8 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ),
-          // Thêm Bottom Navigation Bar
           bottomNavigationBar: BottomNavigationBar(
-            type:
-                BottomNavigationBarType
-                    .fixed, // Để hiển thị nhãn cho tất cả các tab
+            type: BottomNavigationBarType.fixed,
             currentIndex: _selectedIndex,
             onTap: _onItemTapped,
             selectedItemColor: Theme.of(context).colorScheme.primary,
@@ -345,167 +342,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           );
         },
-      ),
-    );
-  }
-
-  Widget _buildProductCard(BuildContext context, Product product) {
-    String imageUrl = ApiConfig.fixImageUrl(product.image);
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ProductDetailScreen(productId: product.id),
-          ),
-        );
-      },
-      child: Card(
-        elevation: 4,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Product Image
-            Expanded(
-              child: ClipRRect(
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(16),
-                ),
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    CachedNetworkImage(
-                      imageUrl: imageUrl,
-                      fit: BoxFit.cover,
-                      placeholder:
-                          (context, url) => Container(
-                            color: Colors.grey[300],
-                            child: const Center(
-                              child: CircularProgressIndicator(),
-                            ),
-                          ),
-                      errorWidget: (context, url, error) {
-                        print('Error loading image: $url, Error: $error');
-                        return Container(
-                          color: Colors.grey[300],
-                          child: const Icon(
-                            Icons.image_not_supported_outlined,
-                            size: 50,
-                            color: Colors.grey,
-                          ),
-                        );
-                      },
-                    ),
-                    if (product.countInStock <= 0)
-                      Container(
-                        color: Colors.black.withOpacity(0.5),
-                        child: const Center(
-                          child: Text(
-                            'OUT OF STOCK',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-                    Positioned(
-                      top: 8,
-                      right: 8,
-                      child: Container(
-                        padding: const EdgeInsets.all(6),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Icon(
-                          Icons.favorite_border,
-                          size: 20,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            // Product Info
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    product.name,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      Icon(Icons.star, size: 16, color: Colors.amber[700]),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${product.rating}',
-                        style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        '(${product.numReviews})',
-                        style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        '\$${product.price.toStringAsFixed(2)}',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                      ),
-                      Container(
-                        width: 36,
-                        height: 36,
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.primary,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: IconButton(
-                          padding: EdgeInsets.zero,
-                          icon: const Icon(
-                            Icons.add_shopping_cart,
-                            size: 18,
-                            color: Colors.white,
-                          ),
-                          onPressed: () {
-                            // Add to cart functionality
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('${product.name} added to cart'),
-                                duration: const Duration(seconds: 1),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
