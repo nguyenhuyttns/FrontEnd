@@ -8,12 +8,14 @@ import 'base_view_model.dart';
 class AuthViewModel extends BaseViewModel {
   final ApiService _apiService = ApiService();
   String? _userEmail;
+  String? _userId; // Add userId field
   bool _isLoggedIn = false;
-  String? _token; // Add this to store the token
+  String? _token;
 
   String? get userEmail => _userEmail;
+  String? get userId => _userId; // Getter for userId
   bool get isLoggedIn => _isLoggedIn;
-  String? get token => _token; // Getter for token
+  String? get token => _token;
 
   AuthViewModel() {
     _checkLoginStatus();
@@ -24,8 +26,10 @@ class AuthViewModel extends BaseViewModel {
     _isLoggedIn = await SharedPrefs.isLoggedIn();
     if (_isLoggedIn) {
       _userEmail = await SharedPrefs.getUserEmail();
-      _token = await SharedPrefs.getToken(); // Get stored token
+      _userId = await SharedPrefs.getUserId(); // Get stored userId
+      _token = await SharedPrefs.getToken();
       debugPrint('Retrieved stored token: $_token');
+      debugPrint('Retrieved stored userId: $_userId');
     }
     setIdle();
   }
@@ -39,16 +43,22 @@ class AuthViewModel extends BaseViewModel {
     if (result['success']) {
       final data = result['data'];
       final token = data['token'];
+      final userEmail = data['user'];
+      final userId = data['userId']; // Extract userId from response
 
-      // Print the token to console
-      debugPrint('==================== LOGIN TOKEN ====================');
+      // Print the token and userId to console
+      debugPrint('==================== LOGIN INFO ====================');
       debugPrint('Token: $token');
+      debugPrint('User ID: $userId');
       debugPrint('=====================================================');
 
       await SharedPrefs.saveToken(token);
-      await SharedPrefs.saveUserEmail(data['user']);
-      _userEmail = data['user'];
-      _token = token; // Store token in view model
+      await SharedPrefs.saveUserEmail(userEmail);
+      await SharedPrefs.saveUserId(userId); // Save userId to SharedPrefs
+
+      _userEmail = userEmail;
+      _userId = userId; // Store userId in view model
+      _token = token;
       _isLoggedIn = true;
       setIdle();
       return true;
@@ -80,7 +90,31 @@ class AuthViewModel extends BaseViewModel {
     await SharedPrefs.clearAll();
     _isLoggedIn = false;
     _userEmail = null;
-    _token = null; // Clear token
+    _userId = null; // Clear userId
+    _token = null;
     setIdle();
+  }
+
+  // Method to get user details by ID
+  Future<bool> getUserDetails() async {
+    if (!_isLoggedIn || _token == null || _userId == null) {
+      return false;
+    }
+
+    setBusy();
+    final result = await _apiService.getUserById(_userId!, _token!);
+
+    if (result['success']) {
+      final userData = result['data'];
+      _userEmail = userData['email'];
+
+      await SharedPrefs.saveUserEmail(_userEmail!);
+
+      setIdle();
+      return true;
+    } else {
+      setError(result['message'] ?? 'Failed to get user details');
+      return false;
+    }
   }
 }

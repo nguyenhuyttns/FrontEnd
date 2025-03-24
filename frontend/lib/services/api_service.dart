@@ -23,7 +23,19 @@ class ApiService {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        return {'success': true, 'data': data};
+
+        // Extract userId from JWT token
+        String userId = '';
+        if (data['token'] != null) {
+          // Extract userId from JWT payload
+          userId = _extractUserIdFromToken(data['token']);
+          debugPrint('Extracted user ID from token: $userId');
+        }
+
+        return {
+          'success': true,
+          'data': {...data, 'userId': userId},
+        };
       } else {
         return {'success': false, 'message': _getErrorMessage(response)};
       }
@@ -35,6 +47,43 @@ class ApiService {
     } catch (e) {
       debugPrint('Login error: $e');
       return {'success': false, 'message': 'Network error: ${e.toString()}'};
+    }
+  }
+
+  // Helper method to extract userId from JWT token
+  String _extractUserIdFromToken(String token) {
+    try {
+      // Split the token into parts
+      final parts = token.split('.');
+      if (parts.length != 3) {
+        debugPrint('Invalid token format');
+        return '';
+      }
+
+      // Decode the payload (middle part)
+      String payload = parts[1];
+
+      // Add padding if needed
+      while (payload.length % 4 != 0) {
+        payload += '=';
+      }
+
+      // Replace characters that are different in URL-safe base64
+      payload = payload.replaceAll('-', '+').replaceAll('_', '/');
+
+      // Decode base64
+      final decoded = utf8.decode(base64Url.decode(payload));
+      final payloadMap = json.decode(decoded);
+
+      // Extract userId from payload
+      if (payloadMap.containsKey('userId')) {
+        return payloadMap['userId'];
+      }
+
+      return '';
+    } catch (e) {
+      debugPrint('Error extracting userId from token: $e');
+      return '';
     }
   }
 
@@ -69,6 +118,37 @@ class ApiService {
       };
     } catch (e) {
       debugPrint('Registration error: $e');
+      return {'success': false, 'message': 'Network error: ${e.toString()}'};
+    }
+  }
+
+  // Get user by ID
+  Future<Map<String, dynamic>> getUserById(String userId, String token) async {
+    try {
+      final response = await http.get(
+        Uri.parse('${ApiConfig.baseUrl}/api/v1/users/$userId'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      debugPrint('Get user response status: ${response.statusCode}');
+      debugPrint('Get user response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final userData = jsonDecode(response.body);
+        return {'success': true, 'data': userData};
+      } else {
+        return {'success': false, 'message': _getErrorMessage(response)};
+      }
+    } on SocketException {
+      return {
+        'success': false,
+        'message': 'No internet connection. Please check your network.',
+      };
+    } catch (e) {
+      debugPrint('Get user error: $e');
       return {'success': false, 'message': 'Network error: ${e.toString()}'};
     }
   }

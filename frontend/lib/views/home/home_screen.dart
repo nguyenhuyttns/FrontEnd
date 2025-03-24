@@ -1,11 +1,15 @@
 // lib/views/home/home_screen.dart
 import 'package:flutter/material.dart';
 import 'package:frontend/config/api_config.dart';
+import 'package:frontend/views/carts/cart_screen.dart';
+import 'package:frontend/views/profile/profile_screen.dart';
+import 'package:frontend/views/wallet/wallet_screen.dart';
 import 'package:provider/provider.dart';
 import '../../view_models/product_view_model.dart';
 import '../../models/product.dart';
 import 'product_detail_screen.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import '../../view_models/auth_view_model.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -16,11 +20,43 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _searchController = TextEditingController();
+  int _selectedIndex = 0; // Thêm biến để theo dõi tab đang được chọn
 
   @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
+  }
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+
+    // Chuyển đến màn hình tương ứng
+    switch (index) {
+      case 0:
+        // Đã ở Home, không cần làm gì
+        break;
+      case 1:
+        // Chuyển đến Cart
+        Navigator.of(
+          context,
+        ).push(MaterialPageRoute(builder: (context) => CartScreen()));
+        break;
+      case 2:
+        // Chuyển đến Wallet
+        Navigator.of(
+          context,
+        ).push(MaterialPageRoute(builder: (context) => WalletScreen()));
+        break;
+      case 3:
+        // Chuyển đến Profile
+        Navigator.of(
+          context,
+        ).push(MaterialPageRoute(builder: (context) => ProfileScreen()));
+        break;
+    }
   }
 
   @override
@@ -33,7 +69,7 @@ class _HomeScreenState extends State<HomeScreen> {
               onRefresh: () => productViewModel.refreshProducts(),
               child: CustomScrollView(
                 slivers: [
-                  // App Bar with Title
+                  // App Bar with Title - Fixed to prevent overflow
                   SliverAppBar(
                     floating: true,
                     pinned: true,
@@ -56,14 +92,64 @@ class _HomeScreenState extends State<HomeScreen> {
                       ],
                     ),
                     actions: [
+                      // Notification Icon
                       IconButton(
                         icon: const Icon(Icons.notifications_outlined),
                         onPressed: () {},
                       ),
+                      // Logout Button
+                      IconButton(
+                        icon: const Icon(Icons.logout),
+                        tooltip: 'Logout',
+                        onPressed: () {
+                          // Show confirmation dialog
+                          showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return AlertDialog(
+                                title: const Text('Logout'),
+                                content: const Text(
+                                  'Are you sure you want to logout?',
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed:
+                                        () => Navigator.of(context).pop(),
+                                    child: const Text('CANCEL'),
+                                  ),
+                                  TextButton(
+                                    onPressed: () async {
+                                      // Thực hiện đăng xuất thông qua AuthViewModel
+                                      final authViewModel =
+                                          Provider.of<AuthViewModel>(
+                                            context,
+                                            listen: false,
+                                          );
+                                      await authViewModel.logout();
+
+                                      // Đóng dialog
+                                      Navigator.of(context).pop();
+
+                                      // Điều hướng về màn hình đăng nhập
+                                      Navigator.of(
+                                        context,
+                                      ).pushReplacementNamed('/login');
+                                    },
+                                    child: const Text('LOGOUT'),
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                        },
+                      ),
                     ],
+                    // Sửa lỗi tràn bố cục bằng cách tăng preferredSize và điều chỉnh padding
                     bottom: PreferredSize(
-                      preferredSize: const Size.fromHeight(60),
-                      child: Padding(
+                      preferredSize: const Size.fromHeight(
+                        66,
+                      ), // Tăng chiều cao lên
+                      child: Container(
                         padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                         child: _buildSearchBar(productViewModel),
                       ),
@@ -134,6 +220,31 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ),
+          // Thêm Bottom Navigation Bar
+          bottomNavigationBar: BottomNavigationBar(
+            type:
+                BottomNavigationBarType
+                    .fixed, // Để hiển thị nhãn cho tất cả các tab
+            currentIndex: _selectedIndex,
+            onTap: _onItemTapped,
+            selectedItemColor: Theme.of(context).colorScheme.primary,
+            unselectedItemColor: Colors.grey,
+            items: const [
+              BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.shopping_cart),
+                label: 'Cart',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.account_balance_wallet),
+                label: 'Wallet',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.person),
+                label: 'Profile',
+              ),
+            ],
+          ),
         );
       },
     );
@@ -202,7 +313,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                 BoxShadow(
                                   color: Theme.of(
                                     context,
-                                    // ignore: deprecated_member_use
                                   ).colorScheme.primary.withOpacity(0.3),
                                   blurRadius: 8,
                                   offset: const Offset(0, 4),
@@ -275,19 +385,20 @@ class _HomeScreenState extends State<HomeScreen> {
                               child: CircularProgressIndicator(),
                             ),
                           ),
-                      errorWidget:
-                          (context, url, error) => Container(
-                            color: Colors.grey[300],
-                            child: const Icon(
-                              Icons.image_not_supported_outlined,
-                              size: 50,
-                              color: Colors.grey,
-                            ),
+                      errorWidget: (context, url, error) {
+                        print('Error loading image: $url, Error: $error');
+                        return Container(
+                          color: Colors.grey[300],
+                          child: const Icon(
+                            Icons.image_not_supported_outlined,
+                            size: 50,
+                            color: Colors.grey,
                           ),
+                        );
+                      },
                     ),
                     if (product.countInStock <= 0)
                       Container(
-                        // ignore: deprecated_member_use
                         color: Colors.black.withOpacity(0.5),
                         child: const Center(
                           child: Text(
@@ -371,6 +482,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: IconButton(
+                          padding: EdgeInsets.zero,
                           icon: const Icon(
                             Icons.add_shopping_cart,
                             size: 18,

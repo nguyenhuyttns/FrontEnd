@@ -92,4 +92,26 @@ class ProductService {
       return [];
     }
   }
+
+  // Get product by ID
+  Future<Product?> getProductById(String productId) async {
+    try {
+      final response = await http.get(
+        Uri.parse(
+          '${ApiConfig.baseUrl}${ApiConfig.productsEndpoint}/$productId',
+        ),
+      );
+
+      if (response.statusCode == 200) {
+        final dynamic data = json.decode(response.body);
+        return Product.fromJson(data);
+      } else {
+        debugPrint('Failed to load product details: ${response.statusCode}');
+        return null;
+      }
+    } catch (e) {
+      debugPrint('Error fetching product details: $e');
+      return null;
+    }
+  }
 }

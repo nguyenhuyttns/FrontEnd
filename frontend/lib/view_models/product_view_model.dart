@@ -97,4 +97,43 @@ class ProductViewModel extends BaseViewModel {
       setError('Failed to refresh products. Please try again.');
     }
   }
+
+  // Add these properties to your ProductViewModel class
+  Product? _selectedProduct;
+  bool _isLoadingProduct = false;
+  bool _hasProductError = false;
+  String _errorMessage = '';
+
+  // Add these getters
+  Product? get selectedProduct => _selectedProduct;
+  bool get isLoadingProduct => _isLoadingProduct;
+  bool get hasProductError => _hasProductError;
+  @override
+  String get errorMessage => _errorMessage;
+
+  // Add this method to fetch product details
+  Future<void> getProductById(String productId) async {
+    _isLoadingProduct = true;
+    _hasProductError = false;
+    _errorMessage = '';
+    notifyListeners();
+
+    try {
+      final product = await _productService.getProductById(productId);
+
+      if (product != null) {
+        _selectedProduct = product;
+      } else {
+        _hasProductError = true;
+        _errorMessage = 'Product not found';
+      }
+    } catch (e) {
+      _hasProductError = true;
+      _errorMessage = 'Failed to load product details';
+      debugPrint('Error in getProductById: $e');
+    } finally {
+      _isLoadingProduct = false;
+      notifyListeners();
+    }
+  }
 }
