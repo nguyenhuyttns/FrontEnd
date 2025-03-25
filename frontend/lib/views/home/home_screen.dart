@@ -1,13 +1,11 @@
 // lib/views/home/home_screen.dart
 import 'package:flutter/material.dart';
-import 'package:frontend/config/api_config.dart';
 import 'package:frontend/views/carts/cart_screen.dart';
 import 'package:frontend/views/profile/profile_screen.dart';
 import 'package:frontend/views/wallet/wallet_screen.dart';
 import 'package:frontend/widgets/product_card.dart'; // Import the new widget
 import 'package:provider/provider.dart';
 import '../../view_models/product_view_model.dart';
-import '../../models/product.dart';
 import 'product_detail_screen.dart';
 import '../../view_models/auth_view_model.dart';
 

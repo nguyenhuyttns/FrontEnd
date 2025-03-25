@@ -1,5 +1,4 @@
 // lib/view_models/user_view_model.dart
-import 'package:flutter/foundation.dart';
 import '../models/user.dart';
 import '../services/user_service.dart';
 import 'base_view_model.dart';
