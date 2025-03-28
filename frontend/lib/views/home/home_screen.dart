@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend/views/carts/cart_screen.dart';
 import 'package:frontend/views/profile/profile_screen.dart';
 import 'package:frontend/views/wallet/wallet_screen.dart';
-import 'package:frontend/widgets/product_card.dart'; // Import the new widget
+import 'package:frontend/widgets/product_card.dart';
 import 'package:provider/provider.dart';
 import '../../view_models/product_view_model.dart';
 import 'product_detail_screen.dart';
@@ -67,16 +67,27 @@ class _HomeScreenState extends State<HomeScreen> {
                   SliverAppBar(
                     floating: true,
                     pinned: true,
+                    elevation: 0,
+                    backgroundColor: Theme.of(context).scaffoldBackgroundColor,
                     title: Row(
                       children: [
-                        Icon(
-                          Icons.shopping_bag,
-                          color: Theme.of(context).colorScheme.primary,
-                          size: 30,
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.primary.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(
+                            Icons.shopping_bag,
+                            color: Theme.of(context).colorScheme.primary,
+                            size: 28,
+                          ),
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: 12),
                         Text(
-                          'ShopEase',
+                          'E-Shop',
                           style: TextStyle(
                             color: Theme.of(context).colorScheme.primary,
                             fontWeight: FontWeight.bold,
@@ -87,11 +98,26 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     actions: [
                       IconButton(
-                        icon: const Icon(Icons.notifications_outlined),
+                        icon: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(Icons.notifications_outlined),
+                        ),
                         onPressed: () {},
                       ),
+                      const SizedBox(width: 8),
                       IconButton(
-                        icon: const Icon(Icons.logout),
+                        icon: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(Icons.logout),
+                        ),
                         tooltip: 'Logout',
                         onPressed: () {
                           showDialog(
@@ -129,6 +155,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           );
                         },
                       ),
+                      const SizedBox(width: 8),
                     ],
                     bottom: PreferredSize(
                       preferredSize: const Size.fromHeight(66),
@@ -139,8 +166,54 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
 
+                  // Section Title
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                      child: Text(
+                        'Categories',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
+                      ),
+                    ),
+                  ),
+
                   // Categories
                   SliverToBoxAdapter(child: _buildCategories(productViewModel)),
+
+                  // Products Section Title
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Products',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).colorScheme.onSurface,
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              // View all products functionality
+                            },
+                            child: Text(
+                              'View All',
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
 
                   // Products
                   if (productViewModel.isBusy)
@@ -167,6 +240,15 @@ class _HomeScreenState extends State<HomeScreen> {
                             const SizedBox(height: 24),
                             ElevatedButton(
                               onPressed: () => productViewModel.loadData(),
+                              style: ElevatedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 24,
+                                  vertical: 12,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
                               child: const Text('Try Again'),
                             ),
                           ],
@@ -183,7 +265,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     )
                   else
-                    // In home_screen.dart, update the SliverGrid section:
                     SliverPadding(
                       padding: const EdgeInsets.all(16),
                       sliver: SliverGrid(
@@ -209,7 +290,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                               );
                             },
-                            // Remove the onAddToCart parameter
                           );
                         }, childCount: productViewModel.products.length),
                       ),
@@ -218,27 +298,48 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ),
-          bottomNavigationBar: BottomNavigationBar(
-            type: BottomNavigationBarType.fixed,
-            currentIndex: _selectedIndex,
-            onTap: _onItemTapped,
-            selectedItemColor: Theme.of(context).colorScheme.primary,
-            unselectedItemColor: Colors.grey,
-            items: const [
-              BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.shopping_cart),
-                label: 'Cart',
+          bottomNavigationBar: Container(
+            decoration: BoxDecoration(
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  spreadRadius: 1,
+                  blurRadius: 10,
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(20),
+                topRight: Radius.circular(20),
               ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.account_balance_wallet),
-                label: 'Wallet',
+              child: BottomNavigationBar(
+                type: BottomNavigationBarType.fixed,
+                currentIndex: _selectedIndex,
+                onTap: _onItemTapped,
+                selectedItemColor: Theme.of(context).colorScheme.primary,
+                unselectedItemColor: Colors.grey,
+                elevation: 8,
+                items: const [
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.home),
+                    label: 'Home',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.shopping_cart),
+                    label: 'Cart',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.account_balance_wallet),
+                    label: 'Wallet',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.person),
+                    label: 'Profile',
+                  ),
+                ],
               ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.person),
-                label: 'Profile',
-              ),
-            ],
+            ),
           ),
         );
       },
@@ -249,19 +350,28 @@ class _HomeScreenState extends State<HomeScreen> {
     return Container(
       height: 50,
       decoration: BoxDecoration(
-        color: Colors.grey[200],
-        borderRadius: BorderRadius.circular(25),
+        color: Colors.grey[100],
+        borderRadius: BorderRadius.circular(15),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            spreadRadius: 1,
+            blurRadius: 3,
+            offset: const Offset(0, 1),
+          ),
+        ],
       ),
       child: TextField(
         controller: _searchController,
         onChanged: productViewModel.setSearchQuery,
         decoration: InputDecoration(
           hintText: 'Search products...',
-          prefixIcon: const Icon(Icons.search),
+          hintStyle: TextStyle(color: Colors.grey[400]),
+          prefixIcon: Icon(Icons.search, color: Colors.grey[500]),
           suffixIcon:
               _searchController.text.isNotEmpty
                   ? IconButton(
-                    icon: const Icon(Icons.clear),
+                    icon: Icon(Icons.clear, color: Colors.grey[500]),
                     onPressed: () {
                       _searchController.clear();
                       productViewModel.setSearchQuery('');
@@ -276,9 +386,13 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildCategories(ProductViewModel productViewModel) {
+    // Calculate fixed width for all category tabs
+    // This will make all tabs the same width regardless of text length
+    final double fixedWidth = 110.0;
+
     return Container(
-      height: 120,
-      padding: const EdgeInsets.symmetric(vertical: 16),
+      height: 50,
+      margin: const EdgeInsets.only(top: 8),
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -287,88 +401,50 @@ class _HomeScreenState extends State<HomeScreen> {
           final category = productViewModel.categories[index];
           final isSelected = category.id == productViewModel.selectedCategoryId;
 
-          return Padding(
-            padding: const EdgeInsets.only(right: 16),
+          return Container(
+            width: fixedWidth, // Fixed width for all tabs
+            margin: const EdgeInsets.only(right: 12),
             child: GestureDetector(
               onTap: () => productViewModel.selectCategory(category.id),
-              child: Column(
-                children: [
-                  Container(
-                    width: 60,
-                    height: 60,
-                    decoration: BoxDecoration(
-                      color:
-                          isSelected
-                              ? Theme.of(context).colorScheme.primary
-                              : _getCategoryColor(category.color),
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow:
-                          isSelected
-                              ? [
-                                BoxShadow(
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.primary.withOpacity(0.3),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ]
-                              : null,
-                    ),
-                    child: Center(
-                      child: Icon(
-                        _getCategoryIcon(category.name),
-                        color: Colors.white,
-                        size: 30,
-                      ),
-                    ),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                decoration: BoxDecoration(
+                  color:
+                      isSelected
+                          ? Theme.of(context).colorScheme.primary
+                          : Colors.transparent,
+                  borderRadius: BorderRadius.circular(25),
+                  border: Border.all(
+                    color:
+                        isSelected
+                            ? Theme.of(context).colorScheme.primary
+                            : Colors.grey.withOpacity(0.3),
+                    width: 1.5,
                   ),
-                  const SizedBox(height: 8),
-                  Text(
+                ),
+                child: Center(
+                  child: Text(
                     category.name,
                     style: TextStyle(
-                      fontWeight:
-                          isSelected ? FontWeight.bold : FontWeight.normal,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
                       color:
                           isSelected
-                              ? Theme.of(context).colorScheme.primary
-                              : Colors.black,
+                              ? Colors.white
+                              : Theme.of(
+                                context,
+                              ).colorScheme.onSurface.withOpacity(0.8),
                     ),
+                    overflow: TextOverflow.ellipsis, // Handle long text
+                    textAlign: TextAlign.center,
                   ),
-                ],
+                ),
               ),
             ),
           );
         },
       ),
     );
-  }
-
-  IconData _getCategoryIcon(String categoryName) {
-    switch (categoryName.toLowerCase()) {
-      case 'all':
-        return Icons.apps;
-      case 'electronics':
-        return Icons.devices;
-      case 'home':
-        return Icons.home;
-      case 'health':
-        return Icons.health_and_safety;
-      case 'fashion':
-        return Icons.checkroom;
-      case 'beauty':
-        return Icons.face;
-      case 'sports':
-        return Icons.sports_soccer;
-      case 'books':
-        return Icons.book;
-      case 'toys':
-        return Icons.toys;
-      case 'food':
-        return Icons.fastfood;
-      default:
-        return Icons.category;
-    }
   }
 
   Color _getCategoryColor(String colorHex) {

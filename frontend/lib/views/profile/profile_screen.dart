@@ -20,6 +20,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool _isLoading = false;
   bool _obscurePassword = true;
   bool _isInitialized = false;
+  int _selectedTabIndex = 0;
 
   // Form controllers
   final TextEditingController _nameController = TextEditingController();
@@ -127,14 +128,40 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (success) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Profile updated successfully')),
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.check_circle, color: Colors.white),
+                  const SizedBox(width: 12),
+                  const Text('Profile updated successfully'),
+                ],
+              ),
+              backgroundColor: Colors.green,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
           );
         }
       } else {
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(userViewModel.errorMessage)));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.error_outline, color: Colors.white),
+                  const SizedBox(width: 12),
+                  Expanded(child: Text(userViewModel.errorMessage)),
+                ],
+              ),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+          );
         }
       }
     }
@@ -145,12 +172,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return LoadingOverlay(
       isLoading: _isLoading,
       child: Scaffold(
+        backgroundColor: Colors.grey[50],
         appBar: AppBar(
           title: const Text('My Profile'),
+          elevation: 0,
           actions: [
             if (!_isEditing)
               IconButton(
                 icon: const Icon(Icons.edit),
+                tooltip: 'Edit Profile',
                 onPressed: () {
                   setState(() {
                     _isEditing = true;
@@ -159,7 +189,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               )
             else
               IconButton(
-                icon: const Icon(Icons.cancel),
+                icon: const Icon(Icons.close),
+                tooltip: 'Cancel Editing',
                 onPressed: () {
                   setState(() {
                     _isEditing = false;
@@ -183,19 +214,42 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   children: [
                     const Icon(
                       Icons.error_outline,
-                      size: 48,
+                      size: 64,
                       color: Colors.red,
                     ),
-                    const SizedBox(height: 16),
-                    Text(
-                      userViewModel.errorMessage,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(fontSize: 16),
-                    ),
                     const SizedBox(height: 24),
-                    ElevatedButton(
+                    Text(
+                      'Failed to load profile',
+                      style: Theme.of(
+                        context,
+                      ).textTheme.headlineSmall?.copyWith(
+                        color: Colors.red[700],
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 32),
+                      child: Text(
+                        userViewModel.errorMessage,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 16, color: Colors.grey[700]),
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                    ElevatedButton.icon(
                       onPressed: _loadUserProfile,
-                      child: const Text('Try Again'),
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('Try Again'),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 12,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -203,30 +257,62 @@ class _ProfileScreenState extends State<ProfileScreen> {
             }
 
             if (userViewModel.user == null) {
-              return const Center(
-                child: Text('No profile information available'),
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.person_off, size: 64, color: Colors.grey[400]),
+                    const SizedBox(height: 16),
+                    Text(
+                      'No profile information available',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.grey[700],
+                      ),
+                    ),
+                  ],
+                ),
               );
             }
 
-            return _buildProfileForm(context, userViewModel.user!);
+            return _buildProfileContent(context, userViewModel.user!);
           },
         ),
         bottomNavigationBar:
             _isEditing
                 ? Container(
                   padding: const EdgeInsets.all(16),
-                  child: ElevatedButton(
-                    onPressed: _saveProfile,
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      backgroundColor: Theme.of(context).primaryColor,
-                      foregroundColor: Colors.white,
-                    ),
-                    child: const Text(
-                      'SAVE CHANGES',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        spreadRadius: 1,
+                        blurRadius: 10,
+                        offset: const Offset(0, -5),
+                      ),
+                    ],
+                  ),
+                  child: SafeArea(
+                    child: ElevatedButton(
+                      onPressed: _saveProfile,
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        backgroundColor: Theme.of(context).primaryColor,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: const Text(
+                        'SAVE CHANGES',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1,
+                        ),
                       ),
                     ),
                   ),
@@ -236,245 +322,403 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildProfileForm(BuildContext context, User user) {
-    // The rest of the method remains the same as before
-    return Form(
-      key: _formKey,
-      child: ListView(
-        padding: const EdgeInsets.all(16),
+  Widget _buildProfileContent(BuildContext context, User user) {
+    return Column(
+      children: [
+        // Profile Header
+        _buildProfileHeader(user),
+
+        // Tabs
+        _buildTabBar(),
+
+        // Tab Content
+        Expanded(
+          child:
+              _selectedTabIndex == 0
+                  ? _buildPersonalInfoTab(user)
+                  : _buildAddressTab(user),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildProfileHeader(User user) {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: Theme.of(context).primaryColor,
+        borderRadius: const BorderRadius.only(
+          bottomLeft: Radius.circular(32),
+          bottomRight: Radius.circular(32),
+        ),
+      ),
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 30),
+      child: Column(
         children: [
-          // Profile Header
-          Center(
-            child: Column(
-              children: [
-                CircleAvatar(
+          // Avatar and Name
+          Stack(
+            alignment: Alignment.bottomRight,
+            children: [
+              Container(
+                margin: const EdgeInsets.only(bottom: 10, right: 10),
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      spreadRadius: 1,
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: CircleAvatar(
                   radius: 50,
-                  backgroundColor: Theme.of(
-                    context,
-                  ).primaryColor.withOpacity(0.2),
+                  backgroundColor: Colors.white.withOpacity(0.9),
                   child: Text(
                     user.name.isNotEmpty ? user.name[0].toUpperCase() : '?',
                     style: TextStyle(
-                      fontSize: 36,
+                      fontSize: 40,
                       fontWeight: FontWeight.bold,
                       color: Theme.of(context).primaryColor,
                     ),
                   ),
                 ),
-                const SizedBox(height: 16),
+              ),
+              if (user.isAdmin)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.amber[700],
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        spreadRadius: 1,
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.verified_user, color: Colors.white, size: 16),
+                      SizedBox(width: 4),
+                      Text(
+                        'ADMIN',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+
+          const SizedBox(height: 16),
+
+          // User Info
+          Text(
+            user.name,
+            style: const TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.email, color: Colors.white70, size: 16),
+              const SizedBox(width: 8),
+              Text(
+                user.email,
+                style: const TextStyle(fontSize: 16, color: Colors.white70),
+              ),
+            ],
+          ),
+          if (user.phone.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.phone, color: Colors.white70, size: 16),
+                const SizedBox(width: 8),
                 Text(
-                  user.name,
-                  style: const TextStyle(
-                    fontSize: 24,
+                  user.phone,
+                  style: const TextStyle(fontSize: 16, color: Colors.white70),
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTabBar() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      decoration: BoxDecoration(
+        color: Colors.grey[200],
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: _buildTabButton(
+              index: 0,
+              icon: Icons.person,
+              title: 'Personal Info',
+            ),
+          ),
+          Expanded(
+            child: _buildTabButton(
+              index: 1,
+              icon: Icons.location_on,
+              title: 'Address',
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTabButton({
+    required int index,
+    required IconData icon,
+    required String title,
+  }) {
+    final isSelected = _selectedTabIndex == index;
+
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _selectedTabIndex = index;
+        });
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          color: isSelected ? Colors.white : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow:
+              isSelected
+                  ? [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      spreadRadius: 1,
+                      blurRadius: 5,
+                      offset: const Offset(0, 2),
+                    ),
+                  ]
+                  : null,
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              color:
+                  isSelected
+                      ? Theme.of(context).primaryColor
+                      : Colors.grey[600],
+              size: 20,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              title,
+              style: TextStyle(
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                color:
+                    isSelected
+                        ? Theme.of(context).primaryColor
+                        : Colors.grey[600],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPersonalInfoTab(User user) {
+    return Form(
+      key: _formKey,
+      child: ListView(
+        padding: const EdgeInsets.all(20),
+        children: [
+          // Personal Information
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.03),
+                  spreadRadius: 1,
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Personal Information',
+                  style: TextStyle(
+                    fontSize: 18,
                     fontWeight: FontWeight.bold,
+                    color: Theme.of(context).primaryColor,
                   ),
                 ),
-                Text(
-                  user.email,
-                  style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                const SizedBox(height: 20),
+
+                // Name
+                CustomTextField(
+                  controller: _nameController,
+                  label: 'Full Name',
+                  prefixIcon: Icons.person,
+                  enabled: _isEditing,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter your name';
+                    }
+                    return null;
+                  },
                 ),
-                const SizedBox(height: 8),
-                if (user.isAdmin)
-                  Chip(
-                    label: const Text('Admin'),
-                    backgroundColor: Colors.blue[100],
-                    labelStyle: TextStyle(color: Colors.blue[800]),
-                  ),
+                const SizedBox(height: 16),
+
+                // Email
+                CustomTextField(
+                  controller: _emailController,
+                  label: 'Email',
+                  prefixIcon: Icons.email,
+                  keyboardType: TextInputType.emailAddress,
+                  enabled: _isEditing,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter your email';
+                    }
+                    if (!RegExp(
+                      r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                    ).hasMatch(value)) {
+                      return 'Please enter a valid email';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+
+                // Phone
+                CustomTextField(
+                  controller: _phoneController,
+                  label: 'Phone Number',
+                  prefixIcon: Icons.phone,
+                  keyboardType: TextInputType.phone,
+                  enabled: _isEditing,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter your phone number';
+                    }
+                    return null;
+                  },
+                ),
               ],
             ),
           ),
 
           const SizedBox(height: 24),
-          const Divider(),
-          const SizedBox(height: 16),
-
-          // Personal Information Section
-          const Text(
-            'Personal Information',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 16),
-
-          // Name
-          CustomTextField(
-            controller: _nameController,
-            label: 'Full Name',
-            prefixIcon: Icons.person,
-            enabled: _isEditing,
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter your name';
-              }
-              return null;
-            },
-          ),
-          const SizedBox(height: 16),
-
-          // Email
-          CustomTextField(
-            controller: _emailController,
-            label: 'Email',
-            prefixIcon: Icons.email,
-            keyboardType: TextInputType.emailAddress,
-            enabled: _isEditing,
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter your email';
-              }
-              if (!RegExp(
-                r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
-              ).hasMatch(value)) {
-                return 'Please enter a valid email';
-              }
-              return null;
-            },
-          ),
-          const SizedBox(height: 16),
-
-          // Phone
-          CustomTextField(
-            controller: _phoneController,
-            label: 'Phone Number',
-            prefixIcon: Icons.phone,
-            keyboardType: TextInputType.phone,
-            enabled: _isEditing,
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter your phone number';
-              }
-              return null;
-            },
-          ),
-          const SizedBox(height: 24),
-
-          // Address Section
-          const Divider(),
-          const SizedBox(height: 16),
-          const Text(
-            'Address Information',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 16),
-
-          // Street
-          CustomTextField(
-            controller: _streetController,
-            label: 'Street',
-            prefixIcon: Icons.location_on,
-            enabled: _isEditing,
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter your street';
-              }
-              return null;
-            },
-          ),
-          const SizedBox(height: 16),
-
-          // Apartment
-          CustomTextField(
-            controller: _apartmentController,
-            label: 'Apartment/Suite',
-            prefixIcon: Icons.home,
-            enabled: _isEditing,
-          ),
-          const SizedBox(height: 16),
-
-          // City
-          CustomTextField(
-            controller: _cityController,
-            label: 'City',
-            prefixIcon: Icons.location_city,
-            enabled: _isEditing,
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter your city';
-              }
-              return null;
-            },
-          ),
-          const SizedBox(height: 16),
-
-          // ZIP
-          CustomTextField(
-            controller: _zipController,
-            label: 'ZIP/Postal Code',
-            prefixIcon: Icons.markunread_mailbox,
-            keyboardType: TextInputType.number,
-            enabled: _isEditing,
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter your ZIP code';
-              }
-              return null;
-            },
-          ),
-          const SizedBox(height: 16),
-
-          // Country
-          CustomTextField(
-            controller: _countryController,
-            label: 'Country',
-            prefixIcon: Icons.flag,
-            enabled: _isEditing,
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter your country';
-              }
-              return null;
-            },
-          ),
 
           // Password Section (only when editing)
-          if (_isEditing) ...[
-            const SizedBox(height: 24),
-            const Divider(),
-            const SizedBox(height: 16),
-            const Text(
-              'Change Password (Optional)',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Leave blank if you don\'t want to change your password',
-              style: TextStyle(fontSize: 14, color: Colors.grey),
-            ),
-            const SizedBox(height: 16),
-
-            // Password
-            TextFormField(
-              controller: _passwordController,
-              decoration: InputDecoration(
-                labelText: 'New Password',
-                prefixIcon: const Icon(Icons.lock),
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    _obscurePassword ? Icons.visibility : Icons.visibility_off,
+          if (_isEditing)
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.03),
+                    spreadRadius: 1,
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
                   ),
-                  onPressed: () {
-                    setState(() {
-                      _obscurePassword = !_obscurePassword;
-                    });
-                  },
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
+                ],
               ),
-              obscureText: _obscurePassword,
-              validator: (value) {
-                if (value != null && value.isNotEmpty && value.length < 6) {
-                  return 'Password must be at least 6 characters';
-                }
-                return null;
-              },
-            ),
-          ],
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Change Password',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).primaryColor,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Leave blank if you don\'t want to change your password',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[600],
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
 
-          const SizedBox(height: 32),
+                  // Password
+                  TextFormField(
+                    controller: _passwordController,
+                    decoration: InputDecoration(
+                      labelText: 'New Password',
+                      prefixIcon: const Icon(Icons.lock),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscurePassword
+                              ? Icons.visibility
+                              : Icons.visibility_off,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _obscurePassword = !_obscurePassword;
+                          });
+                        },
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    obscureText: _obscurePassword,
+                    validator: (value) {
+                      if (value != null &&
+                          value.isNotEmpty &&
+                          value.length < 6) {
+                        return 'Password must be at least 6 characters';
+                      }
+                      return null;
+                    },
+                  ),
+                ],
+              ),
+            ),
 
           // Logout Button
-          if (!_isEditing)
+          if (!_isEditing) ...[
+            const SizedBox(height: 32),
             ElevatedButton.icon(
               onPressed: () {
                 showDialog(
@@ -483,6 +727,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       (context) => AlertDialog(
                         title: const Text('Logout'),
                         content: const Text('Are you sure you want to logout?'),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.pop(context),
@@ -499,6 +746,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 context,
                               ).pushReplacementNamed('/login');
                             },
+                            style: TextButton.styleFrom(
+                              foregroundColor: Colors.red,
+                            ),
                             child: const Text('LOGOUT'),
                           ),
                         ],
@@ -510,9 +760,137 @@ class _ProfileScreenState extends State<ProfileScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 12),
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
             ),
+          ],
+
+          const SizedBox(height: 60),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAddressTab(User user) {
+    return Form(
+      key: _formKey,
+      child: ListView(
+        padding: const EdgeInsets.all(20),
+        children: [
+          // Address Information
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.03),
+                  spreadRadius: 1,
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Shipping Address',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).primaryColor,
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                // Street
+                CustomTextField(
+                  controller: _streetController,
+                  label: 'Street',
+                  prefixIcon: Icons.location_on,
+                  enabled: _isEditing,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter your street';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+
+                // Apartment
+                CustomTextField(
+                  controller: _apartmentController,
+                  label: 'Apartment/Suite',
+                  prefixIcon: Icons.home,
+                  enabled: _isEditing,
+                ),
+                const SizedBox(height: 16),
+
+                // City and ZIP in a row
+                Row(
+                  children: [
+                    // City
+                    Expanded(
+                      flex: 3,
+                      child: CustomTextField(
+                        controller: _cityController,
+                        label: 'City',
+                        prefixIcon: Icons.location_city,
+                        enabled: _isEditing,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter your city';
+                          }
+                          return null;
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    // ZIP
+                    Expanded(
+                      flex: 2,
+                      child: CustomTextField(
+                        controller: _zipController,
+                        label: 'ZIP Code',
+                        prefixIcon: Icons.markunread_mailbox,
+                        keyboardType: TextInputType.number,
+                        enabled: _isEditing,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter ZIP';
+                          }
+                          return null;
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+
+                // Country
+                CustomTextField(
+                  controller: _countryController,
+                  label: 'Country',
+                  prefixIcon: Icons.flag,
+                  enabled: _isEditing,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter your country';
+                    }
+                    return null;
+                  },
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 60),
         ],
       ),
     );
