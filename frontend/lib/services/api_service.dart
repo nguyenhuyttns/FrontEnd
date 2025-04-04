@@ -194,4 +194,72 @@ class ApiService {
       return 'Error: ${response.statusCode}';
     }
   }
+
+  // Gửi yêu cầu quên mật khẩu
+  Future<Map<String, dynamic>> forgotPassword(String email) async {
+    try {
+      debugPrint('Sending forgot password request for: $email');
+      final response = await http.post(
+        Uri.parse('${ApiConfig.baseUrl}${ApiConfig.forgotPasswordEndpoint}'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'email': email}),
+      );
+
+      debugPrint('Forgot password response status: ${response.statusCode}');
+      debugPrint('Forgot password response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return {
+          'success': true,
+          'message': data['message'],
+          'resetLink': data['resetLink'],
+          'resetToken': data['resetToken'],
+        };
+      } else {
+        return {'success': false, 'message': _getErrorMessage(response)};
+      }
+    } on SocketException {
+      return {
+        'success': false,
+        'message': 'No internet connection. Please check your network.',
+      };
+    } catch (e) {
+      debugPrint('Forgot password error: $e');
+      return {'success': false, 'message': 'Network error: ${e.toString()}'};
+    }
+  }
+
+  // Đặt lại mật khẩu với token
+  Future<Map<String, dynamic>> resetPassword(
+    String token,
+    String newPassword,
+  ) async {
+    try {
+      debugPrint('Resetting password with token');
+      final response = await http.post(
+        Uri.parse('${ApiConfig.baseUrl}${ApiConfig.resetPasswordEndpoint}'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'token': token, 'newPassword': newPassword}),
+      );
+
+      debugPrint('Reset password response status: ${response.statusCode}');
+      debugPrint('Reset password response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return {'success': true, 'message': data['message']};
+      } else {
+        return {'success': false, 'message': _getErrorMessage(response)};
+      }
+    } on SocketException {
+      return {
+        'success': false,
+        'message': 'No internet connection. Please check your network.',
+      };
+    } catch (e) {
+      debugPrint('Reset password error: $e');
+      return {'success': false, 'message': 'Network error: ${e.toString()}'};
+    }
+  }
 }

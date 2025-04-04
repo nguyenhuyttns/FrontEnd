@@ -117,4 +117,34 @@ class AuthViewModel extends BaseViewModel {
       return false;
     }
   }
+
+  // Gửi yêu cầu quên mật khẩu
+  Future<Map<String, dynamic>> forgotPassword(String email) async {
+    setBusy();
+
+    final result = await _apiService.forgotPassword(email);
+
+    if (result['success']) {
+      setIdle();
+      return result;
+    } else {
+      setError(result['message'] ?? 'Failed to send reset password request');
+      return result;
+    }
+  }
+
+  // Đặt lại mật khẩu
+  Future<bool> resetPassword(String token, String newPassword) async {
+    setBusy();
+
+    final result = await _apiService.resetPassword(token, newPassword);
+
+    if (result['success']) {
+      setIdle();
+      return true;
+    } else {
+      setError(result['message'] ?? 'Failed to reset password');
+      return false;
+    }
+  }
 }

@@ -1,6 +1,7 @@
 // lib/views/auth/login_screen.dart
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:frontend/views/auth/forgot_password_screen.dart';
 import 'package:provider/provider.dart';
 import '../../view_models/auth_view_model.dart';
 // import '../../view_models/base_view_model.dart';
@@ -123,7 +124,14 @@ class _LoginScreenState extends State<LoginScreen> {
                       alignment: Alignment.centerRight,
                       child: TextButton(
                         onPressed: () {
-                          // Implement forgot password functionality
+                          // Thay đổi đoạn này
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder:
+                                  (context) => const ForgotPasswordScreen(),
+                            ),
+                          );
                         },
                         child: Text(
                           'Forgot Password?',

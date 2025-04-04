@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:frontend/provider/cart_provider.dart';
 import 'package:frontend/view_models/order_view_model.dart';
 import 'package:frontend/view_models/user_view_model.dart';
+import 'package:frontend/views/auth/forgot_password_screen.dart';
+import 'package:frontend/views/auth/reset_password_screen.dart';
 import 'package:provider/provider.dart';
 import 'views/auth/login_screen.dart';
 import 'views/auth/register_screen.dart';
@@ -45,6 +47,8 @@ class MyApp extends StatelessWidget {
         '/login': (context) => const LoginScreen(),
         '/register': (context) => const RegisterScreen(),
         '/home': (context) => const HomeScreen(),
+        '/forgot-password': (context) => const ForgotPasswordScreen(),
+        '/reset-password': (context) => const ResetPasswordScreen(),
       },
     );
   }
@@ -64,5 +68,27 @@ class AuthWrapper extends StatelessWidget {
     } else {
       return const LoginScreen();
     }
+  }
+}
+
+// Thêm class ResetPasswordWrapper vào cuối file
+class ResetPasswordWrapper extends StatelessWidget {
+  const ResetPasswordWrapper({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    // Lấy token từ URL
+    final uri = Uri.parse(ModalRoute.of(context)!.settings.name ?? '');
+    final token = uri.queryParameters['token'] ?? '';
+
+    if (token.isEmpty) {
+      // Nếu không có token, chuyển hướng về trang đăng nhập
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Navigator.of(context).pushReplacementNamed('/login');
+      });
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
+    return ResetPasswordScreen(token: token);
   }
 }
