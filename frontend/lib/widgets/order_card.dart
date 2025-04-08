@@ -2,7 +2,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:frontend/models/order.dart';
-import 'package:cached_network_image/cached_network_image.dart'; // Add this dependency if not already present
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:frontend/views/orders/order_detail_screen.dart';
 
 class OrderCard extends StatelessWidget {
   final Order order;
@@ -359,14 +360,21 @@ class OrderCard extends StatelessWidget {
               ),
             ),
 
-            // Track Order Button
+            // Order Details Button
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
               child: Row(
                 children: [
                   Expanded(
                     child: OutlinedButton(
-                      onPressed: onTap,
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder:
+                                (context) => OrderDetailScreen(order: order),
+                          ),
+                        );
+                      },
                       style: OutlinedButton.styleFrom(
                         side: BorderSide(color: theme.primaryColor),
                         shape: RoundedRectangleBorder(
