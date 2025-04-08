@@ -1,5 +1,6 @@
 // lib/views/orders/checkout_screen.dart
 import 'package:flutter/material.dart';
+import 'package:frontend/views/orders/order_success_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:frontend/provider/cart_provider.dart';
 import 'package:frontend/view_models/auth_view_model.dart';
@@ -89,24 +90,17 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         throw Exception("User not logged in");
       }
 
-      // Get user ID - Make sure to store user ID in your AuthViewModel
+      // Get user ID
       final userId = authViewModel.userId;
 
       if (userId == null || userId.isEmpty) {
         throw Exception("User ID not available");
       }
 
-      // Debug
-      print('User ID: $userId');
-      print('Auth Token: ${authViewModel.token}');
-
       // Prepare order items
       final orderItems =
           cartProvider.items.entries.map((entry) {
-            return {
-              "quantity": entry.value.quantity,
-              "product": entry.key, // Assuming entry.key is the product ID
-            };
+            return {"quantity": entry.value.quantity, "product": entry.key};
           }).toList();
 
       // Prepare order data
@@ -118,7 +112,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         "zip": _zipController.text,
         "country": _countryController.text,
         "phone": _phoneController.text,
-        "user": userId, // Using ID instead of email
+        "user": userId,
       };
 
       // Place order using the order service
@@ -133,14 +127,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
         if (!mounted) return;
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Order placed successfully!'),
-            backgroundColor: Colors.green,
-          ),
+        // Navigate to order success screen
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => const OrderSuccessScreen()),
         );
-
-        Navigator.of(context).popUntil((route) => route.isFirst);
       } else {
         // Handle error
         throw Exception(result['message'] ?? 'Failed to place order');
