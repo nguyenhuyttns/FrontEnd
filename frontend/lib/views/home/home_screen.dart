@@ -6,8 +6,8 @@ import 'package:frontend/views/wallet/wallet_screen.dart';
 import 'package:frontend/widgets/product_card.dart';
 import 'package:provider/provider.dart';
 import '../../view_models/product_view_model.dart';
-import 'product_detail_screen.dart';
 import '../../view_models/auth_view_model.dart';
+import 'product_detail_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -38,17 +38,17 @@ class _HomeScreenState extends State<HomeScreen> {
       case 1:
         Navigator.of(
           context,
-        ).push(MaterialPageRoute(builder: (context) => CartScreen()));
+        ).push(MaterialPageRoute(builder: (context) => const CartScreen()));
         break;
       case 2:
         Navigator.of(
           context,
-        ).push(MaterialPageRoute(builder: (context) => WalletScreen()));
+        ).push(MaterialPageRoute(builder: (context) => const WalletScreen()));
         break;
       case 3:
         Navigator.of(
           context,
-        ).push(MaterialPageRoute(builder: (context) => ProfileScreen()));
+        ).push(MaterialPageRoute(builder: (context) => const ProfileScreen()));
         break;
     }
   }
@@ -256,11 +256,22 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     )
                   else if (productViewModel.products.isEmpty)
-                    const SliverFillRemaining(
+                    SliverFillRemaining(
                       child: Center(
-                        child: Text(
-                          'No products found.',
-                          style: TextStyle(fontSize: 16),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            // Hiển thị nội dung khác nhau tùy thuộc vào tab đang chọn
+                            if (productViewModel.selectedCategoryId.isEmpty)
+                              // Tab "For Me"
+                              _buildForMeEmptyState(context, productViewModel)
+                            else
+                              // Tab danh mục khác
+                              const Text(
+                                'No products found in this category.',
+                                style: TextStyle(fontSize: 16),
+                              ),
+                          ],
                         ),
                       ),
                     )
@@ -401,6 +412,12 @@ class _HomeScreenState extends State<HomeScreen> {
           final category = productViewModel.categories[index];
           final isSelected = category.id == productViewModel.selectedCategoryId;
 
+          // Check if this is the first category (index 0) which is typically "All"
+          final isFirstCategory = index == 0;
+
+          // Display "For Me" instead of "All" for the first category
+          final buttonText = isFirstCategory ? 'For Me' : category.name;
+
           return Container(
             width: fixedWidth, // Fixed width for all tabs
             margin: const EdgeInsets.only(right: 12),
@@ -424,7 +441,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 child: Center(
                   child: Text(
-                    category.name,
+                    buttonText,
                     style: TextStyle(
                       fontWeight: FontWeight.w600,
                       fontSize: 14,
@@ -445,6 +462,150 @@ class _HomeScreenState extends State<HomeScreen> {
         },
       ),
     );
+  }
+
+  Widget _buildForMeEmptyState(
+    BuildContext context,
+    ProductViewModel productViewModel,
+  ) {
+    final authViewModel = Provider.of<AuthViewModel>(context);
+
+    if (!authViewModel.isLoggedIn) {
+      // Trạng thái khi chưa đăng nhập
+      return Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.grey[200],
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.person_outline,
+              size: 64,
+              color: Colors.grey[400],
+            ),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            'Sign in for Personalized Recommendations',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey[800],
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 12),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 40),
+            child: Text(
+              'Create an account or sign in to get product recommendations based on your interests.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+            ),
+          ),
+          const SizedBox(height: 32),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.of(context).pushNamed('/login');
+                },
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 12,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: const Text('Sign In'),
+              ),
+              const SizedBox(width: 16),
+              OutlinedButton(
+                onPressed: () {
+                  Navigator.of(context).pushNamed('/register');
+                },
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 12,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: const Text('Register'),
+              ),
+            ],
+          ),
+        ],
+      );
+    } else if (productViewModel.isError) {
+      // Trạng thái khi đã đăng nhập nhưng chưa có đề xuất
+      return Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.grey[200],
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.lightbulb_outline,
+              size: 64,
+              color: Colors.amber[700],
+            ),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            'We\'re Learning Your Preferences',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey[800],
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 12),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 40),
+            child: Text(
+              'Browse and shop more products to help us understand your preferences better.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+            ),
+          ),
+          const SizedBox(height: 32),
+          ElevatedButton.icon(
+            onPressed: () {
+              // Chuyển người dùng đến danh mục phổ biến
+              if (productViewModel.categories.length > 1) {
+                productViewModel.selectCategory(
+                  productViewModel.categories[1].id,
+                );
+              }
+            },
+            icon: const Icon(Icons.explore),
+            label: const Text('Explore Products'),
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+          ),
+        ],
+      );
+    } else {
+      // Trạng thái đang tải
+      return const Center(child: CircularProgressIndicator());
+    }
   }
 
   Color _getCategoryColor(String colorHex) {

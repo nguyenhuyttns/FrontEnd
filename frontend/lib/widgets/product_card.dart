@@ -344,6 +344,7 @@ class ProductCard extends StatelessWidget {
                                             product.price,
                                             product.name,
                                             imageUrl,
+                                            product.categoryId,
                                           );
 
                                           // Show snackbar with animation

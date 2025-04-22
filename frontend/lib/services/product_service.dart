@@ -114,4 +114,53 @@ class ProductService {
       return null;
     }
   }
+
+  // Thêm phương thức này vào class ProductService
+  Future<List<Product>> getRelatedProducts(
+    String categoryId,
+    List<String> excludeProductIds,
+  ) async {
+    try {
+      debugPrint('Getting related products for category: $categoryId');
+      debugPrint('Excluding products: $excludeProductIds');
+
+      // Chuyển danh sách excludeProductIds thành chuỗi ngăn cách bởi dấu phẩy
+      final excludeParam =
+          excludeProductIds.isNotEmpty ? excludeProductIds.join(',') : '';
+
+      final url =
+          '${ApiConfig.baseUrl}${ApiConfig.productsEndpoint}/related/$categoryId';
+      final fullUrl =
+          excludeParam.isNotEmpty ? '$url?exclude=$excludeParam' : url;
+
+      debugPrint('API URL: $fullUrl');
+
+      final response = await http.get(
+        Uri.parse(fullUrl),
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      debugPrint('API response status: ${response.statusCode}');
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> responseData = json.decode(response.body);
+        debugPrint('API response: $responseData');
+
+        if (responseData['success'] == true && responseData['data'] != null) {
+          final List<dynamic> data = responseData['data'];
+          return data.map((json) => Product.fromJson(json)).toList();
+        } else {
+          debugPrint('API returned success=false or no data');
+          return [];
+        }
+      } else {
+        debugPrint('Failed to load related products: ${response.statusCode}');
+        debugPrint('Response body: ${response.body}');
+        return [];
+      }
+    } catch (e) {
+      debugPrint('Error fetching related products: $e');
+      return [];
+    }
+  }
 }

@@ -1,6 +1,7 @@
 // lib/main.dart
 import 'package:flutter/material.dart';
 import 'package:frontend/provider/cart_provider.dart';
+import 'package:frontend/utils/custom_scroll_behavior.dart';
 import 'package:frontend/view_models/order_view_model.dart';
 import 'package:frontend/view_models/user_view_model.dart';
 import 'package:frontend/views/auth/forgot_password_screen.dart';
@@ -11,6 +12,7 @@ import 'views/auth/register_screen.dart';
 import 'views/home/home_screen.dart';
 import 'view_models/product_view_model.dart';
 import 'view_models/auth_view_model.dart';
+import 'package:frontend/utils/navigation_service.dart'; // Thêm dòng này
 
 void main() {
   runApp(
@@ -34,8 +36,10 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: navigatorKey,
       debugShowCheckedModeBanner: false,
       title: 'ShopEase',
+      scrollBehavior: CustomScrollBehavior(),
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,

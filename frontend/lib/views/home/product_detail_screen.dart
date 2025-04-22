@@ -27,15 +27,21 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     super.initState();
     // Load product details when screen initializes
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<ProductViewModel>(
+      final productViewModel = Provider.of<ProductViewModel>(
         context,
         listen: false,
-      ).getProductById(widget.productId);
+      );
+      productViewModel.getProductById(widget.productId);
+
+      // Bắt đầu theo dõi thời gian xem
+      productViewModel.startProductView(widget.productId);
     });
   }
 
   @override
   void dispose() {
+    // Kết thúc theo dõi thời gian xem
+    Provider.of<ProductViewModel>(context, listen: false).endProductView();
     _scrollController.dispose();
     super.dispose();
   }
@@ -695,15 +701,21 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   onPressed:
                       product.countInStock > 0
                           ? () {
+                            // Thêm tracking khi thêm vào giỏ hàng
+                            Provider.of<ProductViewModel>(
+                              context,
+                              listen: false,
+                            ).trackAddToCart(product.id);
+
                             // Add to cart functionality
-                            for (int i = 0; i < _quantity; i++) {
-                              cartProvider.addItem(
-                                product.id,
-                                product.price,
-                                product.name,
-                                ApiConfig.fixImageUrl(product.image),
-                              );
-                            }
+                            cartProvider.addItem(
+                              product.id,
+                              product.price,
+                              product.name,
+                              ApiConfig.fixImageUrl(product.image),
+                              product.categoryId,
+                              quantity: _quantity,
+                            );
 
                             ScaffoldMessenger.of(context).hideCurrentSnackBar();
                             ScaffoldMessenger.of(context).showSnackBar(

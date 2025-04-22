@@ -44,20 +44,15 @@ class AuthViewModel extends BaseViewModel {
       final data = result['data'];
       final token = data['token'];
       final userEmail = data['user'];
-      final userId = data['userId']; // Extract userId from response
+      final userId = data['userId'];
 
-      // Print the token and userId to console
-      debugPrint('==================== LOGIN INFO ====================');
-      debugPrint('Token: $token');
-      debugPrint('User ID: $userId');
-      debugPrint('=====================================================');
-
+      // Lưu token vào SharedPreferences
       await SharedPrefs.saveToken(token);
       await SharedPrefs.saveUserEmail(userEmail);
-      await SharedPrefs.saveUserId(userId); // Save userId to SharedPrefs
+      await SharedPrefs.saveUserId(userId);
 
       _userEmail = userEmail;
-      _userId = userId; // Store userId in view model
+      _userId = userId;
       _token = token;
       _isLoggedIn = true;
       setIdle();

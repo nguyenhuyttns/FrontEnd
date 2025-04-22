@@ -1,6 +1,8 @@
+// lib/widgets/cart_item_widget.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import '../models/cart_item.dart';
 import '../provider/cart_provider.dart';
 
 class CartItemWidget extends StatelessWidget {
@@ -15,8 +17,11 @@ class CartItemWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cart = Provider.of<CartProvider>(context, listen: false);
+    final cartProvider = Provider.of<CartProvider>(context, listen: false);
     final theme = Theme.of(context);
+
+    // Lấy categoryId từ CartProvider
+    final categoryId = cartProvider.getCategoryId(productId);
 
     return Dismissible(
       key: ValueKey(item.id),
@@ -52,7 +57,29 @@ class CartItemWidget extends StatelessWidget {
         );
       },
       onDismissed: (direction) {
-        cart.removeItem(productId);
+        // Xóa sản phẩm khỏi giỏ hàng
+        // Thay vì gọi removeItem, sử dụng clear + addItem
+        final tempQuantity = item.quantity;
+
+        // Xóa sản phẩm bằng cách cập nhật giỏ hàng
+        Map<String, CartItem> tempItems = Map.from(cartProvider.items);
+        tempItems.remove(productId);
+        cartProvider.clear();
+
+        // Thêm lại các sản phẩm khác
+        tempItems.forEach((id, cartItem) {
+          if (id != productId) {
+            cartProvider.addItem(
+              id,
+              cartItem.price,
+              cartItem.name,
+              cartItem.imageUrl,
+              cartProvider.getCategoryId(id),
+              quantity: cartItem.quantity,
+            );
+          }
+        });
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('${item.name} removed from cart'),
@@ -63,13 +90,15 @@ class CartItemWidget extends StatelessWidget {
             action: SnackBarAction(
               label: 'UNDO',
               onPressed: () {
-                // Re-add the item to the cart
-                cart.addItem(productId, item.price, item.name, item.imageUrl);
-
-                // If quantity was more than 1, add it multiple times
-                for (int i = 1; i < item.quantity; i++) {
-                  cart.addItem(productId, item.price, item.name, item.imageUrl);
-                }
+                // Thêm lại sản phẩm
+                cartProvider.addItem(
+                  productId,
+                  item.price,
+                  item.name,
+                  item.imageUrl,
+                  categoryId,
+                  quantity: tempQuantity,
+                );
               },
             ),
           ),
@@ -208,7 +237,36 @@ class CartItemWidget extends StatelessWidget {
                               InkWell(
                                 onTap: () {
                                   if (item.quantity > 1) {
-                                    cart.removeSingleItem(productId);
+                                    // Giảm số lượng đi 1 bằng cách xóa và thêm lại
+                                    Map<String, CartItem> tempItems = Map.from(
+                                      cartProvider.items,
+                                    );
+                                    tempItems.remove(productId);
+                                    cartProvider.clear();
+
+                                    // Thêm lại sản phẩm với số lượng giảm đi 1
+                                    cartProvider.addItem(
+                                      productId,
+                                      item.price,
+                                      item.name,
+                                      item.imageUrl,
+                                      categoryId,
+                                      quantity: item.quantity - 1,
+                                    );
+
+                                    // Thêm lại các sản phẩm khác
+                                    tempItems.forEach((id, cartItem) {
+                                      if (id != productId) {
+                                        cartProvider.addItem(
+                                          id,
+                                          cartItem.price,
+                                          cartItem.name,
+                                          cartItem.imageUrl,
+                                          cartProvider.getCategoryId(id),
+                                          quantity: cartItem.quantity,
+                                        );
+                                      }
+                                    });
                                   } else {
                                     // Show delete confirmation when trying to reduce below 1
                                     showDialog(
@@ -237,7 +295,33 @@ class CartItemWidget extends StatelessWidget {
                                                 child: const Text('Yes'),
                                                 onPressed: () {
                                                   Navigator.of(ctx).pop(true);
-                                                  cart.removeItem(productId);
+
+                                                  // Xóa sản phẩm bằng cách cập nhật giỏ hàng
+                                                  Map<String, CartItem>
+                                                  tempItems = Map.from(
+                                                    cartProvider.items,
+                                                  );
+                                                  tempItems.remove(productId);
+                                                  cartProvider.clear();
+
+                                                  // Thêm lại các sản phẩm khác
+                                                  tempItems.forEach((
+                                                    id,
+                                                    cartItem,
+                                                  ) {
+                                                    if (id != productId) {
+                                                      cartProvider.addItem(
+                                                        id,
+                                                        cartItem.price,
+                                                        cartItem.name,
+                                                        cartItem.imageUrl,
+                                                        cartProvider
+                                                            .getCategoryId(id),
+                                                        quantity:
+                                                            cartItem.quantity,
+                                                      );
+                                                    }
+                                                  });
                                                 },
                                               ),
                                             ],
@@ -280,11 +364,12 @@ class CartItemWidget extends StatelessWidget {
                               // Increase Button
                               InkWell(
                                 onTap: () {
-                                  cart.addItem(
+                                  cartProvider.addItem(
                                     productId,
                                     item.price,
                                     item.name,
                                     item.imageUrl,
+                                    categoryId,
                                   );
                                 },
                                 borderRadius: const BorderRadius.only(

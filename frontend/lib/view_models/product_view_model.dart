@@ -1,19 +1,28 @@
 // lib/view_models/product_view_model.dart
 import 'package:flutter/material.dart';
-
+import 'package:provider/provider.dart';
 import '../models/product.dart';
 import 'package:frontend/models/category.dart';
 import '../services/product_service.dart';
+import '../services/recommendation_service.dart'; // Thêm dòng này
+import '../utils/navigation_service.dart'; // Thêm dòng này
+import '../view_models/auth_view_model.dart'; // Thêm dòng này
 import 'base_view_model.dart';
 
 class ProductViewModel extends BaseViewModel {
   final ProductService _productService = ProductService();
+  final RecommendationService _recommendationService =
+      RecommendationService(); // Thêm dòng này
 
   List<Product> _products = [];
   List<Product> _filteredProducts = [];
   List<Category> _categories = [];
   String _selectedCategoryId = '';
   String _searchQuery = '';
+
+  // Thêm thuộc tính để theo dõi thời gian xem
+  DateTime? _productViewStartTime;
+  String? _currentViewedProductId;
 
   List<Product> get products => _filteredProducts;
   List<Category> get categories => _categories;
@@ -37,9 +46,11 @@ class ProductViewModel extends BaseViewModel {
         Category(id: '', name: 'All', icon: 'all', color: '#6200EE'),
       );
 
-      // Load all products
+      // Load all products but don't display them initially
       _products = await _productService.getProducts();
-      _filteredProducts = List.from(_products);
+
+      // Start with an empty filtered list (blank page)
+      _filteredProducts = [];
 
       setIdle();
     } catch (e) {
@@ -48,25 +59,119 @@ class ProductViewModel extends BaseViewModel {
     }
   }
 
+  // Bắt đầu theo dõi thời gian xem sản phẩm
+  void startProductView(String productId) {
+    _productViewStartTime = DateTime.now();
+    _currentViewedProductId = productId;
+    debugPrint('Started tracking view for product: $productId');
+  }
+
+  // Kết thúc và ghi lại thời gian xem sản phẩm
+  Future<void> endProductView() async {
+    if (_productViewStartTime != null && _currentViewedProductId != null) {
+      final viewDuration =
+          DateTime.now().difference(_productViewStartTime!).inSeconds;
+      await _recommendationService.trackProductView(
+        _currentViewedProductId!,
+        viewDuration,
+      );
+
+      debugPrint(
+        'Tracked view for product: $_currentViewedProductId, duration: $viewDuration seconds',
+      );
+
+      _productViewStartTime = null;
+      _currentViewedProductId = null;
+    }
+  }
+
+  // Ghi lại thêm vào giỏ hàng
+  Future<void> trackAddToCart(String productId) async {
+    final result = await _recommendationService.trackAddToCart(productId);
+    debugPrint('Tracked add to cart for product: $productId, success: $result');
+  }
+
+  // Ghi lại mua hàng
+  Future<void> trackPurchase(String productId) async {
+    final result = await _recommendationService.trackPurchase(productId);
+    debugPrint('Tracked purchase for product: $productId, success: $result');
+  }
+
+  // Tải đề xuất "For Me"
+  Future<void> loadForMeRecommendations() async {
+    setBusy();
+
+    try {
+      // Kiểm tra xem người dùng đã đăng nhập chưa
+      final authViewModel = Provider.of<AuthViewModel>(
+        navigatorKey.currentContext!,
+        listen: false,
+      );
+
+      if (!authViewModel.isLoggedIn) {
+        // Nếu chưa đăng nhập, hiển thị màn hình trống với lời nhắc đăng nhập
+        _filteredProducts = [];
+        setIdle();
+        return;
+      }
+
+      // Gọi API đề xuất
+      _filteredProducts =
+          await _recommendationService.getForMeRecommendations();
+
+      if (_filteredProducts.isEmpty) {
+        // Nếu không có đề xuất, hiển thị thông báo
+        setError(
+          'We\'re still learning your preferences. Browse more products to get personalized recommendations.',
+        );
+      }
+    } catch (e) {
+      debugPrint('Error loading recommendations: $e');
+      _filteredProducts = [];
+      setError('An error occurred while loading recommendations');
+    }
+
+    setIdle();
+  }
+
   void selectCategory(String categoryId) {
     setBusy();
     _selectedCategoryId = categoryId;
-    _applyFilters();
-    setIdle();
+
+    // Nếu "For Me" được chọn
+    if (categoryId.isEmpty) {
+      loadForMeRecommendations(); // Tải đề xuất cá nhân hóa
+    } else {
+      // Các danh mục khác vẫn như cũ
+      _applyFilters();
+      setIdle();
+    }
   }
 
   void setSearchQuery(String query) {
     _searchQuery = query;
-    _applyFilters();
+
+    // Nếu đang ở "For Me" và có search query, vẫn giữ trang trống
+    if (_selectedCategoryId.isEmpty) {
+      _filteredProducts = [];
+    } else {
+      _applyFilters();
+    }
+
+    notifyListeners();
   }
 
   void _applyFilters() {
+    // Chỉ áp dụng filter nếu không phải là "For Me"
+    if (_selectedCategoryId.isEmpty) {
+      _filteredProducts = [];
+      return;
+    }
+
     _filteredProducts =
         _products.where((product) {
           // Apply category filter
-          bool matchesCategory =
-              _selectedCategoryId.isEmpty ||
-              product.categoryId == _selectedCategoryId;
+          bool matchesCategory = product.categoryId == _selectedCategoryId;
 
           // Apply search filter
           bool matchesSearch =
@@ -85,33 +190,33 @@ class ProductViewModel extends BaseViewModel {
   Future<void> refreshProducts() async {
     try {
       if (_selectedCategoryId.isEmpty) {
-        _products = await _productService.getProducts();
+        // Nếu đang ở "For Me", tải lại đề xuất
+        loadForMeRecommendations();
       } else {
+        // Cho các danh mục khác, tải lại sản phẩm theo danh mục
         _products = await _productService.getProductsByCategory(
           _selectedCategoryId,
         );
+        _applyFilters();
       }
-      _applyFilters();
     } catch (e) {
       debugPrint('Error refreshing products: $e');
       setError('Failed to refresh products. Please try again.');
     }
   }
 
-  // Add these properties to your ProductViewModel class
+  // Giữ các phương thức hiện có
   Product? _selectedProduct;
   bool _isLoadingProduct = false;
   bool _hasProductError = false;
   String _errorMessage = '';
 
-  // Add these getters
   Product? get selectedProduct => _selectedProduct;
   bool get isLoadingProduct => _isLoadingProduct;
   bool get hasProductError => _hasProductError;
   @override
   String get errorMessage => _errorMessage;
 
-  // Add this method to fetch product details
   Future<void> getProductById(String productId) async {
     _isLoadingProduct = true;
     _hasProductError = false;

@@ -1,5 +1,6 @@
 // lib/views/orders/checkout_screen.dart
 import 'package:flutter/material.dart';
+import 'package:frontend/view_models/product_view_model.dart';
 import 'package:frontend/views/orders/order_success_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:frontend/provider/cart_provider.dart';
@@ -84,6 +85,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     try {
       final cartProvider = Provider.of<CartProvider>(context, listen: false);
       final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+      final productViewModel = Provider.of<ProductViewModel>(
+        context,
+        listen: false,
+      );
 
       // Check if user is logged in
       if (!authViewModel.isLoggedIn) {
@@ -122,7 +127,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       );
 
       if (result['success']) {
-        // Order placed successfully
+        // Thêm tracking cho mỗi sản phẩm được mua
+        for (var entry in cartProvider.items.entries) {
+          await productViewModel.trackPurchase(entry.key);
+        }
+
+        // Clear cart
         cartProvider.clear();
 
         if (!mounted) return;

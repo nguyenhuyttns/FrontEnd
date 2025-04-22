@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:frontend/config/api_config.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:frontend/widgets/cart_item_widget.dart'; // Import your enhanced CartItemWidget
+import 'package:frontend/widgets/related_products.dart';
 
 class CartScreen extends StatelessWidget {
   const CartScreen({super.key});
@@ -494,10 +495,12 @@ class CartScreen extends StatelessWidget {
                   },
                 ),
               ),
+              _buildRelatedProductsSection(cartProvider),
             ],
           );
         },
       ),
+      // Thay thế phần bottomNavigationBar trong CartScreen
       bottomNavigationBar: Consumer<CartProvider>(
         builder: (ctx, cartProvider, _) {
           if (cartProvider.items.isEmpty) {
@@ -505,91 +508,106 @@ class CartScreen extends StatelessWidget {
           }
 
           return Container(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 12,
+            ), // Giảm padding
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(30),
-                topRight: Radius.circular(30),
+                topLeft: Radius.circular(20), // Giảm border radius
+                topRight: Radius.circular(20),
               ),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withOpacity(0.05),
                   spreadRadius: 1,
-                  blurRadius: 10,
-                  offset: const Offset(0, -5),
+                  blurRadius: 6, // Giảm blur
+                  offset: const Offset(0, -3), // Giảm offset
                 ),
               ],
             ),
             child: SafeArea(
+              // Sử dụng maintainBottomViewPadding để tránh bị che bởi thanh navigation của điện thoại
+              maintainBottomViewPadding: true,
+              // Sử dụng minimum để giảm thiểu padding khi không cần thiết
+              minimum: const EdgeInsets.only(bottom: 4),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Pricing details
+                  // Pricing details - Sử dụng Row với mainAxisSize.min để tiết kiệm không gian
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        'Subtotal',
-                        style: TextStyle(fontSize: 16, color: Colors.grey),
+                      // Cột bên trái chứa labels
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Subtotal:',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Shipping:',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          const Text(
+                            'Total:',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
                       ),
-                      Text(
-                        '\$${cartProvider.totalAmount.toStringAsFixed(2)}',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Shipping',
-                        style: TextStyle(fontSize: 16, color: Colors.grey),
-                      ),
-                      const Text(
-                        'FREE',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.green,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 10),
-                    child: Divider(),
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Total',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
-                        '\$${cartProvider.totalAmount.toStringAsFixed(2)}',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: theme.primaryColor,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
 
-                  // Checkout button
+                      // Cột bên phải chứa values
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            '\$${cartProvider.totalAmount.toStringAsFixed(2)}',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          const Text(
+                            'FREE',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.green,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '\$${cartProvider.totalAmount.toStringAsFixed(2)}',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: theme.primaryColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 12), // Giảm khoảng cách
+                  // Checkout button - Giảm chiều cao
                   SizedBox(
                     width: double.infinity,
-                    height: 56,
+                    height: 48, // Giảm chiều cao button
                     child: ElevatedButton(
                       onPressed:
                           cartProvider.items.isEmpty
@@ -606,29 +624,31 @@ class CartScreen extends StatelessWidget {
                         foregroundColor: Colors.white,
                         elevation: 0,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius: BorderRadius.circular(
+                            12,
+                          ), // Giảm border radius
                         ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 0,
+                        ), // Giảm padding
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           const Text(
-                            'PROCEED TO CHECKOUT',
+                            'CHECKOUT', // Rút gọn text
                             style: TextStyle(
-                              fontSize: 16,
+                              fontSize: 14, // Giảm font size
                               fontWeight: FontWeight.bold,
-                              letterSpacing: 1,
+                              letterSpacing: 0.5, // Giảm letter spacing
                             ),
                           ),
                           const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(Icons.arrow_forward, size: 16),
-                          ),
+                          const Icon(
+                            Icons.arrow_forward,
+                            size: 14,
+                          ), // Giảm icon size
                         ],
                       ),
                     ),
@@ -639,6 +659,50 @@ class CartScreen extends StatelessWidget {
           );
         },
       ),
+    );
+  }
+
+  Widget _buildRelatedProductsSection(CartProvider cartProvider) {
+    if (cartProvider.items.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    // Lấy danh sách categoryIds từ các sản phẩm trong giỏ hàng
+    final Set<String> categoryIds = {};
+    final List<String> productIds = [];
+
+    cartProvider.items.forEach((productId, cartItem) {
+      // Thêm productId vào danh sách cần loại trừ
+      productIds.add(productId);
+
+      // Sử dụng getCategoryId thay vì truy cập trực tiếp
+      final categoryId = cartProvider.getCategoryId(productId);
+      if (categoryId.isNotEmpty) {
+        categoryIds.add(categoryId);
+      }
+    });
+
+    // Nếu không có categoryId nào, không hiển thị gợi ý
+    if (categoryIds.isEmpty) {
+      debugPrint('No category IDs found in cart items');
+      return const SizedBox.shrink();
+    }
+
+    // Lấy categoryId đầu tiên để gợi ý
+    final firstCategoryId = categoryIds.first;
+    debugPrint(
+      'Using first category ID for related products: $firstCategoryId',
+    );
+
+    return Column(
+      children: [
+        const Divider(height: 32, thickness: 1, indent: 16, endIndent: 16),
+        RelatedProducts(
+          categoryId: firstCategoryId,
+          excludeProductIds: productIds,
+        ),
+        const SizedBox(height: 16), // Thêm khoảng cách phía dưới
+      ],
     );
   }
 

@@ -1,3 +1,4 @@
+// lib/models/cart_item.dart
 class CartItem {
   final String id;
   final String productId;
@@ -5,6 +6,7 @@ class CartItem {
   final int quantity;
   final double price;
   final String imageUrl;
+  final String categoryId; // Thêm trường này
 
   CartItem({
     required this.id,
@@ -13,6 +15,7 @@ class CartItem {
     required this.quantity,
     required this.price,
     required this.imageUrl,
+    required this.categoryId, // Thêm trường này
   });
 
   Map<String, dynamic> toJson() {
@@ -23,6 +26,7 @@ class CartItem {
       'quantity': quantity,
       'price': price,
       'imageUrl': imageUrl,
+      'categoryId': categoryId, // Thêm trường này
     };
   }
 
@@ -32,8 +36,13 @@ class CartItem {
       productId: json['productId'],
       name: json['name'],
       quantity: json['quantity'],
-      price: json['price'].toDouble(),
+      price:
+          json['price'] is int
+              ? (json['price'] as int).toDouble()
+              : json['price'].toDouble(),
       imageUrl: json['imageUrl'],
+      categoryId:
+          json['categoryId'] ?? '', // Thêm trường này với giá trị mặc định
     );
   }
 }
