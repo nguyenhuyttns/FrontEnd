@@ -4,20 +4,19 @@ import 'package:provider/provider.dart';
 import '../models/product.dart';
 import 'package:frontend/models/category.dart';
 import '../services/product_service.dart';
-import '../services/recommendation_service.dart'; // Thêm dòng này
-import '../utils/navigation_service.dart'; // Thêm dòng này
-import '../view_models/auth_view_model.dart'; // Thêm dòng này
+import '../services/recommendation_service.dart';
+import '../utils/navigation_service.dart';
+import '../view_models/auth_view_model.dart';
 import 'base_view_model.dart';
 
 class ProductViewModel extends BaseViewModel {
   final ProductService _productService = ProductService();
-  final RecommendationService _recommendationService =
-      RecommendationService(); // Thêm dòng này
+  final RecommendationService _recommendationService = RecommendationService();
 
   List<Product> _products = [];
   List<Product> _filteredProducts = [];
   List<Category> _categories = [];
-  String _selectedCategoryId = '';
+  String _selectedCategoryId = ''; // Mặc định là tab "For Me"
   String _searchQuery = '';
 
   // Thêm thuộc tính để theo dõi thời gian xem
@@ -40,7 +39,7 @@ class ProductViewModel extends BaseViewModel {
       // Load categories first
       _categories = await _productService.getCategories();
 
-      // Add "All" category at the beginning
+      // Add "All" category at the beginning (this will be our "For Me" tab)
       _categories.insert(
         0,
         Category(id: '', name: 'All', icon: 'all', color: '#6200EE'),
@@ -49,14 +48,26 @@ class ProductViewModel extends BaseViewModel {
       // Load all products but don't display them initially
       _products = await _productService.getProducts();
 
-      // Start with an empty filtered list (blank page)
-      _filteredProducts = [];
+      // Tự động gọi API recommendations khi khởi tạo
+      await loadRecommendations();
 
       setIdle();
     } catch (e) {
       debugPrint('Error in ProductViewModel.loadData: $e');
       setError('Failed to load products. Please try again.');
     }
+  }
+
+  // Phương thức mới để tải recommendations
+  Future<void> loadRecommendations() async {
+    // Đánh dấu tab "For Me" được chọn
+    _selectedCategoryId = '';
+
+    // Tải đề xuất
+    await loadForMeRecommendations();
+
+    // Thông báo UI cập nhật
+    notifyListeners();
   }
 
   // Bắt đầu theo dõi thời gian xem sản phẩm
@@ -239,6 +250,29 @@ class ProductViewModel extends BaseViewModel {
     } finally {
       _isLoadingProduct = false;
       notifyListeners();
+    }
+  }
+
+  Future<List<Product>> searchProducts(String query) async {
+    if (query.isEmpty) {
+      return [];
+    }
+
+    try {
+      // Tải tất cả sản phẩm nếu chưa có
+      if (_products.isEmpty) {
+        _products = await _productService.getProducts();
+      }
+
+      // Lọc sản phẩm theo query
+      return _products.where((product) {
+        return product.name.toLowerCase().contains(query.toLowerCase()) ||
+            product.description.toLowerCase().contains(query.toLowerCase()) ||
+            (product.brand.toLowerCase() ?? '').contains(query.toLowerCase());
+      }).toList();
+    } catch (e) {
+      debugPrint('Error searching products: $e');
+      throw Exception('Failed to search products');
     }
   }
 }

@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/view_models/product_view_model.dart';
 import 'package:frontend/views/orders/order_success_screen.dart';
+import 'package:frontend/views/orders/payment_method_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:frontend/provider/cart_provider.dart';
 import 'package:frontend/view_models/auth_view_model.dart';
@@ -73,6 +74,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     super.dispose();
   }
 
+  // Thay thế phương thức _placeOrder trong checkout_screen.dart
   Future<void> _placeOrder() async {
     if (!_formKey.currentState!.validate()) {
       return;
@@ -132,14 +134,17 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           await productViewModel.trackPurchase(entry.key);
         }
 
-        // Clear cart
-        cartProvider.clear();
-
         if (!mounted) return;
 
-        // Navigate to order success screen
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const OrderSuccessScreen()),
+        // Thay đổi: Chuyển đến màn hình chọn phương thức thanh toán thay vì màn hình thành công
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder:
+                (context) => PaymentMethodScreen(
+                  orderId: result['data']['id'],
+                  totalAmount: cartProvider.totalAmount,
+                ),
+          ),
         );
       } else {
         // Handle error

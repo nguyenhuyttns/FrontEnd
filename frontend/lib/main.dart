@@ -13,6 +13,7 @@ import 'views/home/home_screen.dart';
 import 'view_models/product_view_model.dart';
 import 'view_models/auth_view_model.dart';
 import 'package:frontend/utils/navigation_service.dart'; // Thêm dòng này
+import 'package:frontend/view_models/payment_view_model.dart';
 
 void main() {
   runApp(
@@ -23,6 +24,7 @@ void main() {
         ChangeNotifierProvider(create: (_) => AuthViewModel()),
         ChangeNotifierProvider(create: (_) => UserViewModel()),
         ChangeNotifierProvider(create: (_) => OrderViewModel()),
+        ChangeNotifierProvider(create: (_) => PaymentViewModel()),
         // Thêm các provider khác nếu cần
       ],
       child: const MyApp(),

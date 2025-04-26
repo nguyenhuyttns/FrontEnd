@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/views/carts/cart_screen.dart';
 import 'package:frontend/views/profile/profile_screen.dart';
+import 'package:frontend/views/search/search_screen.dart';
 import 'package:frontend/views/wallet/wallet_screen.dart';
 import 'package:frontend/widgets/product_card.dart';
 import 'package:provider/provider.dart';
@@ -19,6 +20,25 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _searchController = TextEditingController();
   int _selectedIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Thêm đoạn code này để tự động chọn tab "For Me" và gọi API khi màn hình được tạo
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final productViewModel = Provider.of<ProductViewModel>(
+        context,
+        listen: false,
+      );
+
+      // Đặt selectedCategoryId thành rỗng (tương ứng với tab "For Me")
+      productViewModel.selectCategory('');
+
+      // Tải dữ liệu đề xuất
+      productViewModel.loadRecommendations();
+    });
+  }
 
   @override
   void dispose() {
@@ -358,39 +378,44 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildSearchBar(ProductViewModel productViewModel) {
-    return Container(
-      height: 50,
-      decoration: BoxDecoration(
-        color: Colors.grey[100],
-        borderRadius: BorderRadius.circular(15),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 3,
-            offset: const Offset(0, 1),
+    return GestureDetector(
+      onTap: () {
+        // Navigate to search screen when search bar is tapped
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder:
+                (context) => SearchScreen(initialQuery: _searchController.text),
           ),
-        ],
-      ),
-      child: TextField(
-        controller: _searchController,
-        onChanged: productViewModel.setSearchQuery,
-        decoration: InputDecoration(
-          hintText: 'Search products...',
-          hintStyle: TextStyle(color: Colors.grey[400]),
-          prefixIcon: Icon(Icons.search, color: Colors.grey[500]),
-          suffixIcon:
-              _searchController.text.isNotEmpty
-                  ? IconButton(
-                    icon: Icon(Icons.clear, color: Colors.grey[500]),
-                    onPressed: () {
-                      _searchController.clear();
-                      productViewModel.setSearchQuery('');
-                    },
-                  )
-                  : null,
-          border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(vertical: 15),
+        );
+      },
+      child: Container(
+        height: 50,
+        decoration: BoxDecoration(
+          color: Colors.grey[100],
+          borderRadius: BorderRadius.circular(15),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.1),
+              spreadRadius: 1,
+              blurRadius: 3,
+              offset: const Offset(0, 1),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 15),
+              child: Icon(Icons.search, color: Colors.grey[500]),
+            ),
+            Expanded(
+              child: Text(
+                'Search products...',
+                style: TextStyle(color: Colors.grey[400], fontSize: 16),
+              ),
+            ),
+          ],
         ),
       ),
     );

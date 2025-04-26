@@ -1,7 +1,7 @@
 // lib/config/api_config.dart
 class ApiConfig {
   // Các endpoint hiện có
-  static const String serverIP = '192.168.1.216';
+  static const String serverIP = 'localhost';
   static const String baseUrl = 'http://$serverIP:3000/api/v1';
 
   static const String productsEndpoint = '/products';
@@ -16,6 +16,7 @@ class ApiConfig {
   // Thêm endpoints mới
   static const String userActivityEndpoint = '/user-activity';
   static const String recommendationsEndpoint = '/recommendations';
+  static const String paymentsEndpoint = '/payments';
 
   // Phương thức hỗ trợ để sửa URL hình ảnh
   static String fixImageUrl(String url) {
